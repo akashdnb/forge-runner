@@ -32,6 +32,7 @@ jobs:
       MANIFEST_URL: ${{ inputs.manifest_url }}
       CALLBACK_URL: ${{ secrets.FORGE_RUNNER_CALLBACK_URL }}
       CALLBACK_TOKEN: ${{ secrets.FORGE_RUNNER_CALLBACK_TOKEN }}
+      FORGE_MANIFEST_HOSTS: ${{ vars.FORGE_MANIFEST_HOSTS }}
       FORGE_ARTIFACT_HOSTS: ${{ vars.FORGE_ARTIFACT_HOSTS }}
       FORGE_UPLOAD_HOSTS: ${{ vars.FORGE_UPLOAD_HOSTS }}
     steps:
@@ -47,6 +48,9 @@ jobs:
           test -n "${GITHUB_SHA}"
           test -n "${ATTEMPT_ID}"
           test -n "${MANIFEST_URL}"
+          test -n "${FORGE_MANIFEST_HOSTS}"
+          test -n "${FORGE_ARTIFACT_HOSTS}"
+          test -n "${FORGE_UPLOAD_HOSTS}"
           git status --porcelain=v1
       - name: Execute sandbox
         shell: bash
