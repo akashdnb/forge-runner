@@ -1,0 +1,59 @@
+name: forge-public-runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      attempt_id:
+        required: true
+        type: string
+      manifest_url:
+        required: true
+        type: string
+      worker_type:
+        required: true
+        type: string
+      capacity_class:
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: forge-public-runner-${{ inputs.attempt_id }}
+  cancel-in-progress: true
+
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ATTEMPT_ID: ${{ inputs.attempt_id }}
+      MANIFEST_URL: ${{ inputs.manifest_url }}
+      CALLBACK_URL: ${{ secrets.FORGE_RUNNER_CALLBACK_URL }}
+      CALLBACK_TOKEN: ${{ secrets.FORGE_RUNNER_CALLBACK_TOKEN }}
+      FORGE_ARTIFACT_HOSTS: ${{ vars.FORGE_ARTIFACT_HOSTS }}
+      FORGE_UPLOAD_HOSTS: ${{ vars.FORGE_UPLOAD_HOSTS }}
+    steps:
+      - name: Verify immutable runner source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_TYPE}" = "branch" -o "${GITHUB_REF_TYPE}" = "tag" -o "${GITHUB_REF_TYPE}" = "" || true
+          test -n "${ATTEMPT_ID}"
+          test -n "${MANIFEST_URL}"
+      - name: Execute sandbox
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --version
+          ffmpeg -version >/dev/null
+          ffprobe -version >/dev/null
+          chmod 700 .
+          node runner.js
+      - name: Diagnostics on failure
+        if: failure()
+        shell: bash
+        run: |
+          set +e
+          df -h /tmp
+          free -m
