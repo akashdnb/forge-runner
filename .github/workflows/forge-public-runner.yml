@@ -16,7 +16,8 @@ on:
         required: true
         type: string
 
-permissions: {}
+permissions:
+  contents: read
 
 concurrency:
   group: forge-public-runner-${{ inputs.attempt_id }}
@@ -34,13 +35,19 @@ jobs:
       FORGE_ARTIFACT_HOSTS: ${{ vars.FORGE_ARTIFACT_HOSTS }}
       FORGE_UPLOAD_HOSTS: ${{ vars.FORGE_UPLOAD_HOSTS }}
     steps:
+      - name: Checkout public runner source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+          persist-credentials: false
       - name: Verify immutable runner source
         shell: bash
         run: |
           set -euo pipefail
-          test "${GITHUB_REF_TYPE}" = "branch" -o "${GITHUB_REF_TYPE}" = "tag" -o "${GITHUB_REF_TYPE}" = "" || true
+          test -n "${GITHUB_SHA}"
           test -n "${ATTEMPT_ID}"
           test -n "${MANIFEST_URL}"
+          git status --porcelain=v1
       - name: Execute sandbox
         shell: bash
         run: |
@@ -48,7 +55,6 @@ jobs:
           node --version
           ffmpeg -version >/dev/null
           ffprobe -version >/dev/null
-          chmod 700 .
           node runner.js
       - name: Diagnostics on failure
         if: failure()
