@@ -1,0 +1,9 @@
+{
+  "name": "forge-runner-public",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Untrusted public execution boundary for Forge Studio",
+  "type": "commonjs",
+  "engines": { "node": ">=20" },
+  "scripts": { "check": "node --check runner.js && node --check policy.js", "test": "node --test", "audit": "node security-audit.js" }
+}
